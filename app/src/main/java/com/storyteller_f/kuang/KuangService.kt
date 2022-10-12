@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import dalvik.system.DexClassLoader
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 
@@ -45,9 +46,25 @@ class KuangService : Service() {
     class Kuang : Binder() {
         private var server: ApplicationEngine? = null
         fun start() {
-            server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
-                configureRouting()
-            }.start(wait = false)
+            val s = "/data/data/com.storyteller_f.kuang/files/sampledex.jar"
+            try {
+                val dexClassLoader = DexClassLoader(s, null, null, javaClass.classLoader)
+                val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText()
+                println(className)
+                val serverClass = dexClassLoader.loadClass(className)
+                val declaredField = serverClass.getField("application")
+                val newInstance = serverClass.getConstructor().newInstance()
+                val method = serverClass.getMethod("start")
+                println(serverClass)
+                this.server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+//                configureRouting()
+                    declaredField.set(newInstance, this)
+                    method.invoke(newInstance)
+                }.start(wait = false)
+            } catch (th: Throwable) {
+
+            }
+
         }
 
         fun stop() {
