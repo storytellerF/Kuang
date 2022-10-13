@@ -1,6 +1,7 @@
 package com.storyteller_f.kuang
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
@@ -45,24 +46,30 @@ class KuangService : Service() {
 
     class Kuang : Binder() {
         private var server: ApplicationEngine? = null
-        fun start() {
-            val s = "/data/data/com.storyteller_f.kuang/files/sampledex.jar"
+        fun start(context: Context) {
             try {
-                val dexClassLoader = DexClassLoader(s, null, null, javaClass.classLoader)
-                val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText()
-                println(className)
-                val serverClass = dexClassLoader.loadClass(className)
-                val declaredField = serverClass.getField("application")
-                val newInstance = serverClass.getConstructor().newInstance()
-                val method = serverClass.getMethod("start")
-                println(serverClass)
+
                 this.server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
 //                configureRouting()
-                    declaredField.set(newInstance, this)
-                    method.invoke(newInstance)
+                    val listFiles = context.filesDir.listFiles { _, name ->
+                        name.endsWith(".jar")
+                    }
+                    listFiles?.forEach {
+                        val dexClassLoader = DexClassLoader(it.absolutePath, null, null, javaClass.classLoader)
+                        val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText()
+                        println(className)
+                        val serverClass = dexClassLoader.loadClass(className)
+                        val declaredField = serverClass.getField("application")
+                        val newInstance = serverClass.getConstructor().newInstance()
+                        val method = serverClass.getMethod("start")
+                        println(serverClass)
+                        declaredField.set(newInstance, this)
+                        method.invoke(newInstance)
+                    }
+
                 }.start(wait = false)
             } catch (th: Throwable) {
-
+                Log.e(TAG, "start: ${th.localizedMessage}", th)
             }
 
         }
@@ -71,9 +78,9 @@ class KuangService : Service() {
             server?.stop()
         }
 
-        fun restart() {
+        fun restart(context: Context) {
             stop()
-            start()
+            start(context)
         }
     }
 

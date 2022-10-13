@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
             val fileOperateBinderLocal = service as KuangService.Kuang
             Log.i(TAG, "onServiceConnected: $fileOperateBinderLocal")
             fileOperateBinder = fileOperateBinderLocal
-            fileOperateBinderLocal.start()
+            fileOperateBinderLocal.start(this@MainActivity)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
