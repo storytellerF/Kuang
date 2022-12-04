@@ -66,14 +66,6 @@ class MainActivity : ComponentActivity() {
 
 }
 
-fun Application.configureRouting() {
-    routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
-    }
-}
-
 @Composable
 fun Greeting(name: String) {
     Text(text = "Hello $name!")
