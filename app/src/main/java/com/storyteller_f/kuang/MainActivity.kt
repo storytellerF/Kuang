@@ -37,10 +37,11 @@ class MainActivity : ComponentActivity() {
         }
 
         //连接服务
+        val intent = Intent(this, KuangService::class.java)
         try {
-            bindService(Intent(this, KuangService::class.java), connection, BIND_AUTO_CREATE)
+            bindService(intent, connection, BIND_AUTO_CREATE)
         } catch (e: Exception) {
-            bindService(Intent(this, KuangService::class.java), connection, 0)
+            bindService(intent, connection, 0)
         }
     }
 

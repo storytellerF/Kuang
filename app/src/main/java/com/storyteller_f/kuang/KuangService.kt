@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -50,21 +51,29 @@ class KuangService : Service() {
             try {
 
                 this.server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
-//                configureRouting()
                     val listFiles = context.filesDir.listFiles { _, name ->
                         name.endsWith(".jar")
                     }
+                    val classLoader = javaClass.classLoader
+                    println("当前classLoader $classLoader")
                     listFiles?.forEach {
-                        val dexClassLoader = DexClassLoader(it.absolutePath, null, null, javaClass.classLoader)
-                        val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText()
+                        val dexClassLoader = DexClassLoader(it.absolutePath, null, null, classLoader)
+                        val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText() ?: return@forEach
                         println(className)
                         val serverClass = dexClassLoader.loadClass(className)
                         val declaredField = serverClass.getField("application")
                         val newInstance = serverClass.getConstructor().newInstance()
-                        val method = serverClass.getMethod("start")
-                        println(serverClass)
+                        println("外部jar classLoader ${serverClass.classLoader}")
                         declaredField.set(newInstance, this)
-                        method.invoke(newInstance)
+                        try {
+                            serverClass.getMethod("start").apply {
+                                invoke(newInstance)
+                            }
+                        } catch (e: Exception) {
+                            serverClass.getMethod("start", ClassLoader::class.java).apply {
+                                invoke(newInstance, dexClassLoader)
+                            }
+                        }
                     }
 
                 }.start(wait = false)
@@ -81,6 +90,7 @@ class KuangService : Service() {
         fun restart(context: Context) {
             stop()
             start(context)
+            Toast.makeText(context, "restarted", Toast.LENGTH_SHORT).show()
         }
     }
 

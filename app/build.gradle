@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.storyteller_f.kuang"
-        minSdk 21
+        minSdk 26
         targetSdk 32
         versionCode 1
         versionName "1.0"
@@ -64,6 +64,25 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 
     //ktor
-    implementation "io.ktor:ktor-server-core-jvm:2.0.3"
-    implementation "io.ktor:ktor-server-netty-jvm:2.0.3"
+
+    def ktor_version = "2.1.2"
+    implementation "io.ktor:ktor-server-core-jvm:" + ktor_version
+    implementation "io.ktor:ktor-server-netty-jvm:2.1.2"
+
+    implementation("io.ktor:ktor-server-webjars-jvm:$ktor_version")
+    implementation("org.webjars:jquery:3.6.1")
+    implementation("io.ktor:ktor-server-host-common-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-status-pages-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-thymeleaf-jvm:$ktor_version")
+//    implementation("ch.qos.logback:logback-classic:1.4.3")
+
+    // https://mvnrepository.com/artifact/org.apache.lucene/lucene-core
+    //implementation group: 'org.apache.lucene', name: 'lucene-core', version: '8.9.0'
+    // https://mvnrepository.com/artifact/org.apache.lucene/lucene-highlighter
+    implementation("org.apache.lucene:lucene-highlighter:8.9.0")
+
+    // https://mvnrepository.com/artifact/org.apache.lucene/lucene-queryparser
+    implementation("org.apache.lucene:lucene-queryparser:8.9.0")
 }
