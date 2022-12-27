@@ -9,7 +9,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -17,25 +20,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.storyteller_f.kuang.ui.theme.KuangTheme
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import java.lang.ref.WeakReference
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val listFiles = filesDir.listFiles { dir -> dir?.extension == "jar" }.orEmpty()
+
         setContent {
             KuangTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Greeting("Android")
+                    Main(listFiles)
                 }
             }
         }
-
         //连接服务
         val intent = Intent(this, KuangService::class.java)
         try {
@@ -67,14 +66,22 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
+fun Main(plugins: Array<out File>) {
+    LazyColumn(content = {
+        plugins.forEach {
+            item {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(text = it.name)
+                }
+            }
+        }
+    })
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     KuangTheme {
-        Greeting("Android")
+        Main(arrayOf(File("/plugin-name")))
     }
 }
