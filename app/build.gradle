@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.storyteller_f.kuang'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.storyteller_f.kuang"
         minSdk 26
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -37,37 +37,39 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.1.1'
+        kotlinCompilerExtensionVersion '1.3.2'
     }
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            pickFirsts += ['META-INF/*', '/META-INF/io.netty.versions.properties']
         }
-        pickFirst 'META-INF/*'
-        pickFirst "/META-INF/io.netty.versions.properties"
+        jniLibs {
+            pickFirsts += ['META-INF/*']
+        }
     }
 }
 
 dependencies {
-
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
-    implementation 'androidx.activity:activity-compose:1.3.1'
+    def compose_material3 = "1.0.1"
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.activity:activity-compose:1.6.1'
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
-    implementation 'androidx.compose.material3:material3:1.0.0-alpha02'
+    implementation "androidx.compose.material3:material3:$compose_material3"
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 
     //ktor
 
-    def ktor_version = "2.1.2"
+    def ktor_version = "2.2.2"
     implementation "io.ktor:ktor-server-core-jvm:" + ktor_version
-    implementation "io.ktor:ktor-server-netty-jvm:2.1.2"
+    implementation "io.ktor:ktor-server-netty-jvm:$ktor_version"
 
     implementation("io.ktor:ktor-server-webjars-jvm:$ktor_version")
     implementation("org.webjars:jquery:3.6.1")

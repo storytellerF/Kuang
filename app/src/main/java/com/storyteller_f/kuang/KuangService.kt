@@ -11,8 +11,12 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import dalvik.system.DexClassLoader
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import java.io.File
 
 class KuangService : Service() {
     private var binder: Kuang? = null
@@ -25,23 +29,20 @@ class KuangService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val s = "foreground"
-        val channel = NotificationChannelCompat.Builder(s, NotificationManagerCompat.IMPORTANCE_MIN).apply {
+        val channelId = "foreground"
+        val channel = NotificationChannelCompat.Builder(channelId, NotificationManagerCompat.IMPORTANCE_MIN).apply {
             setName("running")
-            setSound(null, null)
         }.build()
-        val from = NotificationManagerCompat.from(this)
-        if (from.getNotificationChannel(s) == null)
-            from.createNotificationChannel(channel)
-        val notification = NotificationCompat.Builder(this, s).apply {
-            setSound(null)
-        }.build()
+        val managerCompat = NotificationManagerCompat.from(this)
+        if (managerCompat.getNotificationChannel(channelId) == null)
+            managerCompat.createNotificationChannel(channel)
+        val notification = NotificationCompat.Builder(this, channelId).build()
         startForeground(foreground_notification_id, notification)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
         binder?.stop()
     }
 
@@ -51,36 +52,41 @@ class KuangService : Service() {
             try {
 
                 this.server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+                    configureRouting()
                     val listFiles = context.filesDir.listFiles { _, name ->
                         name.endsWith(".jar")
-                    }
-                    val classLoader = javaClass.classLoader
-                    println("当前classLoader $classLoader")
-                    listFiles?.forEach {
-                        val dexClassLoader = DexClassLoader(it.absolutePath, null, null, classLoader)
-                        val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText() ?: return@forEach
-                        println(className)
-                        val serverClass = dexClassLoader.loadClass(className)
-                        val declaredField = serverClass.getField("application")
-                        val newInstance = serverClass.getConstructor().newInstance()
-                        println("外部jar classLoader ${serverClass.classLoader}")
-                        declaredField.set(newInstance, this)
-                        try {
-                            serverClass.getMethod("start").apply {
-                                invoke(newInstance)
-                            }
-                        } catch (e: Exception) {
-                            serverClass.getMethod("start", ClassLoader::class.java).apply {
-                                invoke(newInstance, dexClassLoader)
-                            }
-                        }
-                    }
+                    }.orEmpty()
+                    loadPlugin(listFiles)
 
                 }.start(wait = false)
             } catch (th: Throwable) {
                 Log.e(TAG, "start: ${th.localizedMessage}", th)
             }
 
+        }
+
+        private fun Application.loadPlugin(listFiles: Array<out File>) {
+            val classLoader = javaClass.classLoader
+            println("当前classLoader $classLoader")
+            listFiles.forEach {
+                val dexClassLoader = DexClassLoader(it.absolutePath, null, null, classLoader)
+                val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText() ?: return@forEach
+                println(className)
+                val serverClass = dexClassLoader.loadClass(className)
+                val declaredField = serverClass.getField("application")
+                val newInstance = serverClass.getConstructor().newInstance()
+                println("外部jar classLoader ${serverClass.classLoader}")
+                declaredField.set(newInstance, this)
+                try {
+                    serverClass.getMethod("start").apply {
+                        invoke(newInstance)
+                    }
+                } catch (e: Exception) {
+                    serverClass.getMethod("start", ClassLoader::class.java).apply {
+                        invoke(newInstance, dexClassLoader)
+                    }
+                }
+            }
         }
 
         fun stop() {
@@ -97,5 +103,13 @@ class KuangService : Service() {
     companion object {
         private const val TAG = "KuangService"
         private const val foreground_notification_id = 10
+    }
+}
+
+fun Application.configureRouting() {
+    routing {
+        get("/") {
+            call.respondText("Hello World!")
+        }
     }
 }
