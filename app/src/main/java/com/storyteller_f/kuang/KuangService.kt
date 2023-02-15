@@ -11,11 +11,18 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import dalvik.system.DexClassLoader
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.html.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.html.body
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.title
 import java.io.File
 
 class KuangService : Service() {
@@ -53,6 +60,7 @@ class KuangService : Service() {
 
                 this.server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
                     configureRouting()
+                    install(StatusPages)
                     val listFiles = context.filesDir.listFiles { _, name ->
                         name.endsWith(".jar")
                     }.orEmpty()
@@ -110,6 +118,21 @@ fun Application.configureRouting() {
     routing {
         get("/") {
             call.respondText("Hello World!")
+        }
+        get("/test") {
+            val name = "Ktor"
+            call.respondHtml(HttpStatusCode.OK) {
+                head {
+                    title {
+                        +name
+                    }
+                }
+                body {
+                    h1 {
+                        +"Hello from $name!"
+                    }
+                }
+            }
         }
     }
 }
