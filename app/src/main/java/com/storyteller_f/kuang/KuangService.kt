@@ -16,14 +16,21 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.html.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
+import io.ktor.websocket.*
 import kotlinx.html.body
 import kotlinx.html.h1
 import kotlinx.html.head
 import kotlinx.html.title
 import java.io.File
+import java.time.Duration
+import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.LinkedHashSet
 
 class KuangService : Service() {
     private var binder: Kuang? = null
@@ -59,10 +66,10 @@ class KuangService : Service() {
             try {
 
                 this.server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+                    plugPlugins()
                     configureRouting()
-                    install(StatusPages)
                     val listFiles = context.filesDir.listFiles { _, name ->
-                        name.endsWith(".dex")
+                        name.endsWith(".jar")
                     }.orEmpty()
                     loadPlugin(listFiles)
 
@@ -73,13 +80,24 @@ class KuangService : Service() {
 
         }
 
+        private fun Application.plugPlugins() {
+            install(StatusPages)
+            install(CallLogging)
+            install(WebSockets) {
+                pingPeriod = Duration.ofSeconds(15)
+                timeout = Duration.ofSeconds(15)
+                maxFrameSize = Long.MAX_VALUE
+                masking = false
+            }
+        }
+
         private fun Application.loadPlugin(listFiles: Array<out File>) {
             val classLoader = javaClass.classLoader
-            println("当前classLoader $classLoader")
+            println("当前classLoader $classLoader ${listFiles.size}")
             listFiles.forEach {
                 val dexClassLoader = DexClassLoader(it.absolutePath, null, null, classLoader)
                 val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText() ?: return@forEach
-                println(className)
+                println("${it.name} $className")
                 val serverClass = dexClassLoader.loadClass(className)
                 val declaredField = serverClass.getField("application")
                 val newInstance = serverClass.getConstructor().newInstance()
@@ -114,24 +132,35 @@ class KuangService : Service() {
     }
 }
 
+class Connection(val session: DefaultWebSocketSession) {
+    companion object {
+        val lastId = AtomicInteger(0)
+    }
+    val name = "user${lastId.getAndIncrement()}"
+}
+
 fun Application.configureRouting() {
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
-        get("/test") {
-            val name = "Ktor"
-            call.respondHtml(HttpStatusCode.OK) {
-                head {
-                    title {
-                        +name
+        val connections = Collections.synchronizedSet<Connection?>(LinkedHashSet())
+        webSocket("/chat") {
+            println("Adding user!")
+            val thisConnection = Connection(this)
+            connections += thisConnection
+            try {
+                send("You are connected! There are ${connections.count()} users here.")
+                for (frame in incoming) {
+                    frame as? Frame.Text ?: continue
+                    val receivedText = frame.readText()
+                    val textWithUsername = "[${thisConnection.name}]: $receivedText"
+                    connections.forEach {
+                        it.session.send(textWithUsername)
                     }
                 }
-                body {
-                    h1 {
-                        +"Hello from $name!"
-                    }
-                }
+            } catch (e: Exception) {
+                println(e.localizedMessage)
+            } finally {
+                println("Removing $thisConnection!")
+                connections -= thisConnection
             }
         }
     }

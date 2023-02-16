@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.tasks.factory.dependsOn
+
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
@@ -26,6 +28,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-html-builder-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-websockets:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
@@ -36,7 +39,7 @@ val convertJarToDex = tasks.register<Exec>("convertJarToDex") {
     commandLine = listOf(
         "$userHome/Library/Android/sdk/build-tools/29.0.1/dx",
         "--dex",
-        "--output=com.example.ktor-samples-0.0.1.dex",
+        "--output=samples.jar",
         "$buildDir/libs/com.example.ktor-samples-0.0.1.jar"
     )
 }
@@ -46,9 +49,18 @@ tasks.build {
 }
 
 song {
-    transfers.set(listOf("$buildDir/libs/com.example.ktor-samples-0.0.1.dex"))
+    transfers.set(listOf("$buildDir/libs/samples.jar"))
     adb.set("$userHome/Library/Android/sdk/platform-tools/adb")
     paths.set(listOf())
     packages.set(listOf("com.storyteller_f.kuang" to "files"))
-    outputName.set("sample.dex")
+    outputName.set("sample.jar")
+}
+
+afterEvaluate {
+    val taskName = "dispatchApk"
+    tasks.findByName(taskName)?.let { task ->
+        task.dependsOn(convertJarToDex)
+        convertJarToDex.get().finalizedBy(task)
+    }
+
 }
