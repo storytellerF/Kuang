@@ -80,7 +80,7 @@ dependencies {
     implementation("io.ktor:ktor-server-thymeleaf-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-html-builder:$ktor_version")
 //    implementation("ch.qos.logback:logback-classic:1.4.3")
-
+//    implementation 'com.github.tony19:logback-android:3.0.0'
     // https://mvnrepository.com/artifact/org.apache.lucene/lucene-core
     //implementation group: 'org.apache.lucene', name: 'lucene-core', version: '8.9.0'
     // https://mvnrepository.com/artifact/org.apache.lucene/lucene-highlighter

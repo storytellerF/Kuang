@@ -62,7 +62,7 @@ class KuangService : Service() {
                     configureRouting()
                     install(StatusPages)
                     val listFiles = context.filesDir.listFiles { _, name ->
-                        name.endsWith(".jar")
+                        name.endsWith(".dex")
                     }.orEmpty()
                     loadPlugin(listFiles)
 

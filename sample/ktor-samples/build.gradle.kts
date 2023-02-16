@@ -6,6 +6,7 @@ plugins {
     application
     kotlin("jvm") version "1.7.22"
     id("io.ktor.plugin") version "2.1.3"
+    id("com.storyteller_f.song") version "0.0.1"
 }
 
 group = "com.example"
@@ -28,4 +29,26 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+}
+val userHome = System.getProperty("user.home")!!
+val convertJarToDex = tasks.register<Exec>("convertJarToDex") {
+    workingDir = File(buildDir, "libs")
+    commandLine = listOf(
+        "$userHome/Library/Android/sdk/build-tools/29.0.1/dx",
+        "--dex",
+        "--output=com.example.ktor-samples-0.0.1.dex",
+        "$buildDir/libs/com.example.ktor-samples-0.0.1.jar"
+    )
+}
+
+tasks.build {
+    finalizedBy(convertJarToDex)
+}
+
+song {
+    transfers.set(listOf("$buildDir/libs/com.example.ktor-samples-0.0.1.dex"))
+    adb.set("$userHome/Library/Android/sdk/platform-tools/adb")
+    paths.set(listOf())
+    packages.set(listOf("com.storyteller_f.kuang" to "files"))
+    outputName.set("sample.dex")
 }
