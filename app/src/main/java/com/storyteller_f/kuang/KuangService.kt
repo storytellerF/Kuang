@@ -22,15 +22,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import kotlinx.html.body
-import kotlinx.html.h1
-import kotlinx.html.head
-import kotlinx.html.title
-import java.io.File
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.LinkedHashSet
 
 class KuangService : Service() {
     private var binder: Kuang? = null
@@ -68,10 +62,7 @@ class KuangService : Service() {
                 this.server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
                     plugPlugins()
                     configureRouting()
-                    val listFiles = context.filesDir.listFiles { _, name ->
-                        name.endsWith(".jar")
-                    }.orEmpty()
-                    loadPlugin(listFiles)
+                    loadPlugin()
 
                 }.start(wait = false)
             } catch (th: Throwable) {
@@ -91,17 +82,12 @@ class KuangService : Service() {
             }
         }
 
-        private fun Application.loadPlugin(listFiles: Array<out File>) {
-            val classLoader = javaClass.classLoader
-            println("当前classLoader $classLoader ${listFiles.size}")
-            listFiles.forEach {
-                val dexClassLoader = DexClassLoader(it.absolutePath, null, null, classLoader)
-                val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText() ?: return@forEach
-                println("${it.name} $className")
-                val serverClass = dexClassLoader.loadClass(className)
+        private fun Application.loadPlugin() {
+            pluginManager.plugins().forEach {
+                val revolvePlugin = pluginManager.revolvePlugin(pluginManager.pluginPath(it))
+                val serverClass = pluginManager.getClass(revolvePlugin.path)
                 val declaredField = serverClass.getField("application")
                 val newInstance = serverClass.getConstructor().newInstance()
-                println("外部jar classLoader ${serverClass.classLoader}")
                 declaredField.set(newInstance, this)
                 try {
                     serverClass.getMethod("start").apply {
@@ -109,9 +95,10 @@ class KuangService : Service() {
                     }
                 } catch (e: Exception) {
                     serverClass.getMethod("start", ClassLoader::class.java).apply {
-                        invoke(newInstance, dexClassLoader)
+                        invoke(newInstance, revolvePlugin.classLoader)
                     }
                 }
+
             }
         }
 
@@ -136,6 +123,7 @@ class Connection(val session: DefaultWebSocketSession) {
     companion object {
         val lastId = AtomicInteger(0)
     }
+
     val name = "user${lastId.getAndIncrement()}"
 }
 

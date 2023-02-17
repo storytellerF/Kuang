@@ -52,7 +52,7 @@ song {
     transfers.set(listOf("$buildDir/libs/samples.jar"))
     adb.set("$userHome/Library/Android/sdk/platform-tools/adb")
     paths.set(listOf())
-    packages.set(listOf("com.storyteller_f.kuang" to "files"))
+    packages.set(listOf("com.storyteller_f.kuang" to "files/plugins"))
     outputName.set("sample.jar")
 }
 
