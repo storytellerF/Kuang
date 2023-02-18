@@ -10,16 +10,11 @@ import android.widget.Toast
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.callloging.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.routing.*
-import io.ktor.server.thymeleaf.*
-import io.ktor.server.websocket.*
-import io.ktor.websocket.*
-import java.util.*
+import kotlin.collections.forEach
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
 class KuangService : Service() {
     private var binder: Kuang? = null

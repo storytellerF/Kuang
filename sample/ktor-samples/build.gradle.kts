@@ -9,6 +9,7 @@ plugins {
     kotlin("jvm") version "1.7.22"
     id("io.ktor.plugin") version "2.1.3"
     id("com.storyteller_f.song") version "0.0.1"
+    kotlin("plugin.serialization") version "1.7.22"
 }
 
 group = "com.example"
@@ -33,6 +34,7 @@ dependencies {
     implementation("io.ktor:ktor-server-thymeleaf:$ktor_version")
     implementation("io.ktor:ktor-server-status-pages-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-call-logging:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

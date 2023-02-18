@@ -11,6 +11,7 @@
         #message-list {
             background-color: aquamarine;
             flex-grow: 1;
+            padding: 8px;
         }
 
         #input-group {
@@ -52,8 +53,6 @@
     function flash() {
         let width = documentElement.clientWidth
         let height = documentElement.clientHeight
-        let bodyMargin = document.body.style.marginTop + document.body.style.marginBottom
-        console.log(bodyMargin);
         console.log(document.documentElement.clientHeight, document.documentElement.clientWidth)
         document.body.style.height = (height - 16) + "px"
     }
@@ -64,7 +63,8 @@
     ws.onmessage = function (msg) {
         console.log(msg);
         let p = document.createElement("p")
-        p.innerText = msg.data
+        let m = JSON.parse(msg.data)
+        p.innerText = m.from + " : " + m.data
         messageList.appendChild(p)
     };
     ws.onerror = function (e) {

@@ -8,6 +8,7 @@ import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import io.ktor.websocket.serialization.*
 import kotlinx.html.*
+import kotlinx.serialization.Serializable
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.LinkedHashSet
@@ -43,13 +44,15 @@ fun Application.configureRouting() {
 }
 
 
-class Connection(val session: DefaultWebSocketSession) {
+class Connection(val session: DefaultWebSocketServerSession) {
     companion object {
         val lastId = AtomicInteger(0)
     }
 
     val name = "user${lastId.getAndIncrement()}"
 }
+@Serializable
+class Message(val from: String, val data: String)
 
 fun Application.webSocketsService() {
     routing {
@@ -59,13 +62,13 @@ fun Application.webSocketsService() {
             val thisConnection = Connection(this)
             connections += thisConnection
             try {
-                send("You are connected! There are ${connections.count()} users here.")
+                sendSerialized(Message("system", "You are connected! There are ${connections.count()} users here."))
                 for (frame in incoming) {
                     frame as? Frame.Text ?: continue
                     val receivedText = frame.readText()
-                    val textWithUsername = "[${thisConnection.name}]: $receivedText"
+
                     connections.forEach {
-                        it.session.send(textWithUsername)
+                        it.session.sendSerialized(Message(thisConnection.name, receivedText))
                     }
                 }
             } catch (e: Exception) {
