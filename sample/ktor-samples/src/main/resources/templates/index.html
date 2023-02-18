@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #message-list {
+            background-color: aquamarine;
+            flex-grow: 1;
+        }
+
+        #input-group {
+            display: flex;
+        }
+
+        #input {
+            flex-grow: 1;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            margin: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>template</h1>
+    <div id="message-list">
+
+    </div>
+    <div id="input-group">
+        <input id="input" />
+        <button>send</button>
+    </div>
+</body>
+<script>
+    let messageList = document.getElementById("message-list")
+    let title = document.querySelector("h1")
+    let input = document.querySelector("#input")
+    let sendButton = document.querySelector("button")
+    let documentElement = document.documentElement
+    flash()
+    window.onresize = function (e) {
+        flash()
+    }
+    function flash() {
+        let width = documentElement.clientWidth
+        let height = documentElement.clientHeight
+        let bodyMargin = document.body.style.marginTop + document.body.style.marginBottom
+        console.log(bodyMargin);
+        console.log(document.documentElement.clientHeight, document.documentElement.clientWidth)
+        document.body.style.height = (height - 16) + "px"
+    }
+    
+    let address = 'ws://' + window.location.host + "/chat"
+    console.log(address);
+    var ws = new WebSocket(address);
+    ws.onmessage = function (msg) {
+        console.log(msg);
+        let p = document.createElement("p")
+        p.innerText = msg.data
+        messageList.appendChild(p)
+    };
+    ws.onerror = function (e) {
+        console.log(e);
+    }
+    ws.onclose = function (params) {
+        console.log(params);
+    }
+    ws.onopen = function (params) {
+        console.log(params);
+    }
+    sendButton.onclick = function () {
+        console.log("send");
+        let content = input.value
+        ws.send(content)
+    }
+</script>
+
+</html>
