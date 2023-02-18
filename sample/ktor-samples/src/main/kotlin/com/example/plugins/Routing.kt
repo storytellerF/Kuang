@@ -4,10 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.html.body
-import kotlinx.html.h1
-import kotlinx.html.head
-import kotlinx.html.title
+import kotlinx.html.*
 
 fun Application.configureRouting() {
 
@@ -27,6 +24,9 @@ fun Application.configureRouting() {
                     body {
                         h1 {
                             +"Hello from $name!"
+                        }
+                        p {
+                            +"paragraph"
                         }
                     }
                 }

@@ -1,4 +1,4 @@
-import com.android.build.gradle.internal.tasks.factory.dependsOn
+import com.storyteller_f.song.Song
 
 val ktor_version: String by project
 val kotlin_version: String by project
@@ -57,7 +57,7 @@ song {
 }
 
 afterEvaluate {
-    val taskName = "dispatchApk"
+    val taskName = Song.taskName
     tasks.findByName(taskName)?.let { task ->
         task.dependsOn(convertJarToDex)
         convertJarToDex.get().finalizedBy(task)

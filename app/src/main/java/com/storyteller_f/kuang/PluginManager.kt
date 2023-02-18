@@ -13,8 +13,8 @@ class PluginManager {
      * key name
      * value configuration
      */
-    val map = mutableMapOf<String, PluginConfiguration>()
-    val raw = mutableMapOf<String, String>()
+    private val map = mutableMapOf<String, PluginConfiguration>()
+    private val raw = mutableMapOf<String, String>()
 
     @Synchronized
     fun findPlugin(file: File) {
@@ -41,7 +41,7 @@ class PluginManager {
         return pluginConfiguration
     }
 
-    fun plugins(): Set<String> {
+    fun pluginsName(): Set<String> {
         return map.keys + raw.keys
     }
 
@@ -54,7 +54,7 @@ class PluginManager {
 
     @WorkerThread
     @Synchronized
-    fun getClass(path: String) : Class<*> {
+    fun getClass(path: String): Class<*> {
         val name = File(path).name
         if (!map.contains(name)) {
             revolvePlugin(path)
@@ -62,5 +62,11 @@ class PluginManager {
         return map[name]!!.let {
             it.classLoader.loadClass(it.className)
         }
+    }
+
+    @Synchronized
+    fun removeAllPlugin() {
+        map.clear()
+        raw.clear()
     }
 }

@@ -15,11 +15,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.storyteller_f.kuang.ui.theme.KuangTheme
 import java.io.File
@@ -28,9 +28,11 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val listFiles = filesDir.listFiles { dir -> dir?.extension == "jar" }.orEmpty()
-
         setContent {
+            val context = LocalContext.current
+            var plugins by remember {
+                mutableStateOf(pluginManager.pluginsName())
+            }
             KuangTheme {
                 Scaffold(
                     topBar = {
@@ -43,11 +45,16 @@ class MainActivity : ComponentActivity() {
                             },
                             actions = {
                                 // RowScope here, so these icons will be placed horizontally
-                                IconButton(onClick = { /* doSomething() */ }) {
-                                    Icon(Icons.Filled.Favorite, contentDescription = "Localized description")
+                                IconButton(onClick = {
+                                    fileOperateBinder?.restart(context)
+                                    plugins = pluginManager.pluginsName()
+                                }) {
+                                    Icon(Icons.Filled.Refresh, contentDescription = "Localized description")
                                 }
-                                IconButton(onClick = { /* doSomething() */ }) {
-                                    Icon(Icons.Filled.Favorite, contentDescription = "Localized description")
+                                IconButton(onClick = {
+                                    fileOperateBinder?.stop()
+                                }) {
+                                    Icon(Icons.Filled.Delete, contentDescription = "Localized description")
                                 }
                             }
                         )
@@ -55,21 +62,20 @@ class MainActivity : ComponentActivity() {
                 ) { padding ->
                     // Screen content
                     // A surface container using the 'background' color from the theme
-                    Surface(modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding), color = MaterialTheme.colorScheme.background) {
-                        Main(listFiles)
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding), color = MaterialTheme.colorScheme.background
+                    ) {
+                        Main(plugins)
                     }
                 }
             }
         }
         //连接服务
         val intent = Intent(this, KuangService::class.java)
-        try {
-            bindService(intent, connection, BIND_AUTO_CREATE)
-        } catch (e: Exception) {
-            bindService(intent, connection, 0)
-        }
+        startService(intent)
+        bindService(intent, connection, 0)
     }
 
     var fileOperateBinder: KuangService.Kuang? = null
@@ -79,7 +85,7 @@ class MainActivity : ComponentActivity() {
             val fileOperateBinderLocal = service as KuangService.Kuang
             Log.i(TAG, "onServiceConnected: $fileOperateBinderLocal")
             fileOperateBinder = fileOperateBinderLocal
-            fileOperateBinderLocal.start(this@MainActivity)
+            fileOperateBinderLocal.start()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -94,12 +100,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Main(plugins: Array<out File>) {
+fun Main(plugins: Set<String>) {
     LazyColumn(content = {
         plugins.forEach {
             item {
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = it.name)
+                    Text(text = it)
                 }
             }
         }
@@ -110,6 +116,6 @@ fun Main(plugins: Array<out File>) {
 @Composable
 fun DefaultPreview() {
     KuangTheme {
-        Main(arrayOf(File("/plugin-name")))
+        Main(setOf("plugin-name"))
     }
 }

@@ -10,15 +10,11 @@ import android.widget.Toast
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import dalvik.system.DexClassLoader
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
-import io.ktor.server.html.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
@@ -35,20 +31,29 @@ class KuangService : Service() {
         }
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "onStartCommand() called with: intent = $intent, flags = $flags, startId = $startId")
+        return super.onStartCommand(intent, flags, startId)
+    }
+
     override fun onCreate() {
+        Log.d(TAG, "onCreate() called")
         super.onCreate()
         val channelId = "foreground"
         val channel = NotificationChannelCompat.Builder(channelId, NotificationManagerCompat.IMPORTANCE_MIN).apply {
             setName("running")
+            this.setDescription("前台服务")
         }.build()
         val managerCompat = NotificationManagerCompat.from(this)
         if (managerCompat.getNotificationChannel(channelId) == null)
             managerCompat.createNotificationChannel(channel)
-        val notification = NotificationCompat.Builder(this, channelId).build()
+        val notification =
+            NotificationCompat.Builder(this, channelId).setSmallIcon(R.mipmap.ic_launcher).setContentTitle("kuang").setContentText("waiting").build()
         startForeground(foreground_notification_id, notification)
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "onDestroy() called")
         super.onDestroy()
         stopForeground(STOP_FOREGROUND_REMOVE)
         binder?.stop()
@@ -56,7 +61,8 @@ class KuangService : Service() {
 
     class Kuang : Binder() {
         private var server: ApplicationEngine? = null
-        fun start(context: Context) {
+        fun start() {
+            Log.d(TAG, "start() called")
             try {
 
                 this.server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
@@ -83,7 +89,8 @@ class KuangService : Service() {
         }
 
         private fun Application.loadPlugin() {
-            pluginManager.plugins().forEach {
+            pluginManager.pluginsName().forEach {
+                Log.i(TAG, "loadPlugin: plugin name $it")
                 val revolvePlugin = pluginManager.revolvePlugin(pluginManager.pluginPath(it))
                 val serverClass = pluginManager.getClass(revolvePlugin.path)
                 val declaredField = serverClass.getField("application")
@@ -108,7 +115,9 @@ class KuangService : Service() {
 
         fun restart(context: Context) {
             stop()
-            start(context)
+            pluginManager.removeAllPlugin()
+            context.refreshPluginList()
+            start()
             Toast.makeText(context, "restarted", Toast.LENGTH_SHORT).show()
         }
     }
