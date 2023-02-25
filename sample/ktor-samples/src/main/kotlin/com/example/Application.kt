@@ -13,8 +13,9 @@ import kotlinx.serialization.json.Json
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver
 import java.time.Duration
 
+@Suppress("unused")
 class TestServer {
-    lateinit var application: Application
+    private lateinit var application: Application
     fun start(classLoader: ClassLoader) {
         application.run {
             setup(classLoader)

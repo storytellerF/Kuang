@@ -12,8 +12,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import kotlin.collections.forEach
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 
 class KuangService : Service() {
@@ -78,17 +76,14 @@ class KuangService : Service() {
                 val newInstance = serverClass.getConstructor().newInstance()
                 declaredField.set(newInstance, this)
                 try {
-                    serverClass.getMethod("start").apply {
-                        invoke(newInstance)
-                    }
+                    serverClass.getMethod("start")(newInstance)
                 } catch (e: Exception) {
-                    serverClass.getMethod("start", ClassLoader::class.java).apply {
-                        invoke(newInstance, revolvePlugin.classLoader)
-                    }
+                    serverClass.getMethod("start", ClassLoader::class.java)(newInstance, revolvePlugin.classLoader)
                 }
             }.start(wait = false)
             return server
         }
+
         fun stop() {
             servers.values.forEach(ApplicationEngine::stop)
             servers.clear()
