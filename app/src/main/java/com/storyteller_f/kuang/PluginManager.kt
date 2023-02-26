@@ -1,5 +1,6 @@
 package com.storyteller_f.kuang
 
+import android.util.Log
 import androidx.annotation.WorkerThread
 import dalvik.system.DexClassLoader
 import java.io.File
@@ -34,7 +35,7 @@ class PluginManager {
         }
         val dexClassLoader = DexClassLoader(path, null, null, javaClass.classLoader)
         val className = dexClassLoader.getResourceAsStream("kcon")?.bufferedReader()?.readText()!!
-
+        Log.i(TAG, "revolvePlugin: $className")
         if (raw.contains(name)) raw.remove(name)
         val pluginConfiguration = PluginConfiguration("1.0", path, name, dexClassLoader, className)
         map[name] = pluginConfiguration
@@ -68,5 +69,9 @@ class PluginManager {
     fun removeAllPlugin() {
         map.clear()
         raw.clear()
+    }
+
+    companion object {
+        private const val TAG = "PluginManager"
     }
 }

@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.thymeleaf.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import io.ktor.websocket.serialization.*
@@ -16,25 +17,23 @@ import kotlin.collections.LinkedHashSet
 fun Application.configureRouting() {
 
     routing {
-        route("/samples") {
-            get("/") {
-                call.respondText("Hello World!")
-            }
-            get("/html") {
-                val name = "samples"
-                call.respondHtml {
-                    head {
-                        title {
-                            +name
-                        }
+        get("/") {
+            call.respond(ThymeleafContent("index", mapOf()))
+        }
+        get("/html") {
+            val name = "samples"
+            call.respondHtml {
+                head {
+                    title {
+                        +name
                     }
-                    body {
-                        h1 {
-                            +"Hello from $name!"
-                        }
-                        p {
-                            +"paragraph"
-                        }
+                }
+                body {
+                    h1 {
+                        +"Hello from $name!"
+                    }
+                    p {
+                        +"paragraph"
                     }
                 }
             }
@@ -51,6 +50,7 @@ class Connection(val session: DefaultWebSocketServerSession) {
 
     val name = "user${lastId.getAndIncrement()}"
 }
+
 @Serializable
 class Message(val from: String, val data: String)
 

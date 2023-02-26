@@ -15,7 +15,7 @@ import java.time.Duration
 
 @Suppress("unused")
 class TestServer {
-    private lateinit var application: Application
+    lateinit var application: Application
     fun start(classLoader: ClassLoader) {
         application.run {
             setup(classLoader)
@@ -45,13 +45,12 @@ private fun Application.setup(classLoader: ClassLoader) {
         contentConverter = KotlinxWebsocketSerializationConverter(Json)
     }
     install(Thymeleaf) {
-        setTemplateResolver(ClassLoaderTemplateResolver().apply {
+        setTemplateResolver(ClassLoaderTemplateResolver(classLoader).apply {
             prefix = "templates/"
             suffix = ".html"
             characterEncoding = "utf-8"
         })
     }
     configureRouting()
-    configureTemplating(classLoader)
     webSocketsService()
 }

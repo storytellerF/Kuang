@@ -56,9 +56,9 @@ class KuangService : Service() {
         fun start() {
             Log.d(TAG, "start() called")
             try {
-                pluginManager.pluginsName().forEach {
+                pluginManager.pluginsName().forEachIndexed { index, it ->
                     Log.i(TAG, "loadPlugin: plugin name $it")
-                    val server = createServer(it)
+                    val server = createServer(it, index)
                     servers[it] = server
                 }
 
@@ -68,8 +68,8 @@ class KuangService : Service() {
 
         }
 
-        private fun createServer(it: String): NettyApplicationEngine {
-            val server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+        private fun createServer(it: String, index: Int): NettyApplicationEngine {
+            val server = embeddedServer(Netty, port = 8080 + index, host = "0.0.0.0") {
                 val revolvePlugin = pluginManager.revolvePlugin(pluginManager.pluginPath(it))
                 val serverClass = pluginManager.getClass(revolvePlugin.path)
                 val declaredField = serverClass.getField("application")

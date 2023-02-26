@@ -32,13 +32,40 @@
         button {
             padding: 10px 14px;
         }
+        .message-line {
+            display: flex;
+            min-height: 40px;
+            margin-bottom: 10px;
+        }
+        .message-avatar {
+            width: 40px;
+            margin-right: 4px;
+            background-color: aliceblue;
+        }
+        .message-content {
+            flex-grow: 1;
+            height: 100%;
+        }
     </style>
 </head>
 
 <body>
     <h1>template</h1>
     <div id="message-list">
+        <div class="message-line" id="template">
+            <div class="message-avatar">
+                <img/>
+            </div>
+            
+            <div class="message-content">
+                <div class="message-user">
 
+                </div>
+                <div class="message-text">
+
+                </div>
+            </div>
+        </div>
     </div>
     <div id="input-group">
         <input id="input" />
@@ -51,6 +78,8 @@
     let input = document.querySelector("#input")
     let sendButton = document.querySelector("button")
     let documentElement = document.documentElement
+    const template = document.getElementById("template")
+    console.log(template);
     flash()
     window.onresize = function (e) {
         flash()
@@ -67,9 +96,9 @@
     var ws = new WebSocket(address);
     ws.onmessage = function (msg) {
         console.log(msg);
-        let p = document.createElement("p")
+        let p = template.cloneNode(true)
         let m = JSON.parse(msg.data)
-        p.innerText = m.from + " : " + m.data
+        flush(m, p)
         messageList.appendChild(p)
     };
     ws.onerror = function (e) {
@@ -85,6 +114,11 @@
         console.log("send");
         let content = input.value
         ws.send(content)
+    }
+
+    function flush(params, element) {
+        element.getElementsByClassName("message-user")[0].innerText = params.from
+        element.getElementsByClassName("message-text")[0].innerText = params.data
     }
 </script>
 
