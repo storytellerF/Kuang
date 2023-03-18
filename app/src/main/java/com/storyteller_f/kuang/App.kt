@@ -20,6 +20,6 @@ fun Context.refreshPluginList() {
         name.endsWith(".jar")
     }.orEmpty()
     listFiles.forEach {
-        pluginManager.findPlugin(File(it.absolutePath))
+        pluginManager.foundPlugin(File(it.absolutePath))
     }
 }

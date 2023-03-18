@@ -18,7 +18,7 @@ class PluginManager {
     private val raw = mutableMapOf<String, String>()
 
     @Synchronized
-    fun findPlugin(file: File) {
+    fun foundPlugin(file: File) {
         val name = file.name
         raw[name] = file.absolutePath
     }
